@@ -19,6 +19,8 @@ class QuestionGUI(threading.Thread):
         #CREATE root
         self.root = tk.Tk()
         self.root.protocol("WM_DELETE_WINDOW", self.callback)
+        self.logo = tk.PhotoImage(file='trigon.png')
+        self.root.iconphoto(False, self.logo)
         self.root.title("!!!TEMP!!!")
         self.root.geometry("1280x720")
 
@@ -26,6 +28,10 @@ class QuestionGUI(threading.Thread):
         self.infobtn = tk.PhotoImage(file='info.png')
         self.tipbutton = tk.Button(self.root, image=self.infobtn)
         self.tip = Hovertip(self.tipbutton, self.info, hover_delay=500)
+
+        #CREATE FLAG BUTTON
+        self.flagbtn = tk.PhotoImage(file='flag.png')
+        self.flagbutton = tk.Button(self.root, image=self.flagbtn, command=self.flag())
 
         #CREATE YES/NO BUTTONS
         self.yesbutton = tk.Button(self.root, text='Yes', font=('Times New Roman', 14), command=self.yesButton())
@@ -41,13 +47,13 @@ class QuestionGUI(threading.Thread):
         self.tipbutton.grid(row=8, column=10)
         self.yesbutton.grid(row=25, column=15)
         self.nobutton.grid(row=25, column=35)
+        self.flagbutton.grid(row=30, column=40)
 
         #UPDATE GUI
         self.updateGUI()
         
         self.root.mainloop()
-    
-    #UPDATES THE GUI WITH NEW QUESTION/INFO
+
     def updateGUI(self):
         if self.isChange:
             self.questionText.config(text=self.question)
@@ -57,6 +63,9 @@ class QuestionGUI(threading.Thread):
 
     def callback(self):
         self.root.quit()
+
+    def flag(self):
+        return None
 
     def yesButton(self):
         return True
@@ -68,8 +77,3 @@ class QuestionGUI(threading.Thread):
         self.isChange = True
         self.question = quest
         self.info = inf
-        
-
-   
-    
-    
