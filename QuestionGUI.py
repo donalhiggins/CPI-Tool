@@ -1,8 +1,9 @@
 import tkinter as tk
-import tkinter
+from tkinter import ttk
 from idlelib.tooltip import Hovertip
 import threading
 from tkinter import simpledialog
+from ttkthemes import ThemedTk
 
 class QuestionGUI(threading.Thread):
     flags = []
@@ -11,6 +12,7 @@ class QuestionGUI(threading.Thread):
     questionText = None
     isChange = False
     maptype = 'temp'
+    
     answer = False
     answered = False
     critical = []
@@ -22,7 +24,8 @@ class QuestionGUI(threading.Thread):
 
     def createGUI(self):
         #CREATE root
-        self.root = tk.Tk()
+        self.root = ThemedTk(theme='arc')
+        self.root['background'] = '#f5f6f7'
         self.root.protocol('WM_DELETE_WINDOW', self.callback)
         self.logo = tk.PhotoImage(file='trigon.png')
         self.root.iconphoto(False, self.logo)
@@ -31,29 +34,29 @@ class QuestionGUI(threading.Thread):
 
         #CREATE INFO BUTTON
         self.infobtn = tk.PhotoImage(file='info.png')
-        self.tipbutton = tk.Button(self.root, image=self.infobtn)
+        self.tipbutton = ttk.Button(self.root, image=self.infobtn)
         self.tip = Hovertip(self.tipbutton, self.info, hover_delay=500)
 
         #CREATE FLAG BUTTON
         self.flagbtn = tk.PhotoImage(file='flag.png')
-        self.flagbutton = tk.Button(self.root, image=self.flagbtn, command=self.flag)
+        self.flagbutton = ttk.Button(self.root, image=self.flagbtn, command=self.flagWindow)
 
         #CREATE YES/NO BUTTONS
-        self.yesbutton = tk.Button(self.root, text='Yes', font=('Times New Roman', 14), command=self.yesButton)
-        self.nobutton = tk.Button(self.root, text='No', font=('Times New Roman', 14), command=self.noButton)
+        self.yesbutton = ttk.Button(self.root, text='Yes', command=self.yesButton)
+        self.nobutton = ttk.Button(self.root, text='No', command=self.noButton)
 
         #CREATE TITLE AND QUESTION
-        self.mapheader = tk.Label(self.root, text=self.maptype, font=('Times New Roman', 24, 'bold'))
-        self.questionText = tk.Label(self.root, text='', font=('Times New Roman', 14))
+        self.mapheader = ttk.Label(self.root, text=self.maptype, font=('Times New Roman', 24, 'bold'))
+        self.questionText = ttk.Label(self.root, text='', font=('Times New Roman', 14), wraplength=1200)
 
         #ARRANGE ELEMENTS
-        self.mapheader.place(x=0, y=0)
+        self.mapheader.place(x=10, y=0)
         self.questionText.place(x=10, y=40)
-        self.tipbutton.place(x=100, y=40)
-        self.yesbutton.place(x=40, y=80)
-        self.nobutton.place(x=85, y=80)
-        self.flagbutton.place(x=125, y=80)
-
+        self.tipbutton.place(x=265, y=100)
+        self.yesbutton.place(x=30, y=100)
+        self.nobutton.place(x=115, y=100)
+        self.flagbutton.place(x=210, y=100)
+        
         #UPDATE GUI
         self.updateGUI()
         
@@ -64,16 +67,23 @@ class QuestionGUI(threading.Thread):
             self.questionText.config(text=self.question)
             self.mapheader.config(text=self.maptype)
             self.tip.text = self.info
-
         self.root.after(1000, self.updateGUI)
 
     def callback(self):
         self.root.quit()
 
-    def flag(self):
-        self.flags.append(simpledialog.askstring(title='Flag', prompt='Why?'))
-        return None
-        
+    def flagWindow(self):
+        self.window = tk.Toplevel(self.root)
+        self.entry = tk.StringVar()
+        self.window.title('Flag')
+        ttk.Label(self.window, text='Why did you flag this?', font=('Times New Roman', 14)).pack()
+        ttk.Entry(self.window, textvariable=self.entry).pack()
+        ttk.Button(self.window, text='Ok', command=self.closeFlagWindow).pack()
+
+    def closeFlagWindow(self):
+        self.flags.append(self.entry.get())
+        self.window.destroy()
+
     def yesButton(self):
         self.answer = True
         self.answered = True
@@ -87,7 +97,7 @@ class QuestionGUI(threading.Thread):
     def getAnswer(self):
         return self.answer
 
-    def updateQuestion(self, quest, inf, mapt=maptype):
+    def updateQuestion(self, quest, inf, mapt):
         self.isChange = True
         self.question = quest
         self.info = inf
