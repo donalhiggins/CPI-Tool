@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from idlelib.tooltip import Hovertip
 import threading
-from tkinter import simpledialog
 from ttkthemes import ThemedTk
 
 class QuestionGUI(threading.Thread):
@@ -11,8 +10,7 @@ class QuestionGUI(threading.Thread):
     info = 'temp_info'
     questionText = None
     isChange = False
-    maptype = 'temp'
-    
+    maptype = 'temp' 
     answer = False
     answered = False
     critical = []
@@ -20,7 +18,6 @@ class QuestionGUI(threading.Thread):
     def __init__(self):
         t1 = threading.Thread(target=self.createGUI)
         t1.start()
-        
 
     def createGUI(self):
         #CREATE root
@@ -28,7 +25,7 @@ class QuestionGUI(threading.Thread):
         self.root['background'] = '#f5f6f7'
         self.root.protocol('WM_DELETE_WINDOW', self.callback)
         self.logo = tk.PhotoImage(file='trigon.png')
-        self.root.iconphoto(False, self.logo)
+        self.root.iconphoto(True, self.logo)
         self.root.title('CPI Tool')
         self.root.geometry('1280x720')
 
