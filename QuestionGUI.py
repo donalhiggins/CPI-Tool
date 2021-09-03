@@ -4,13 +4,14 @@ from idlelib.tooltip import Hovertip
 import threading
 from ttkthemes import ThemedTk
 
+
 class QuestionGUI(threading.Thread):
     flags = []
     question = 'temp_question'
     info = 'temp_info'
     questionText = None
     isChange = False
-    maptype = 'temp' 
+    maptype = 'temp'
     answer = False
     answered = False
     critical = []
@@ -20,7 +21,7 @@ class QuestionGUI(threading.Thread):
         t1.start()
 
     def createGUI(self):
-        #CREATE root
+        # CREATE root
         self.root = ThemedTk(theme='arc')
         self.root['background'] = '#f5f6f7'
         self.root.protocol('WM_DELETE_WINDOW', self.callback)
@@ -29,34 +30,41 @@ class QuestionGUI(threading.Thread):
         self.root.title('CPI Tool')
         self.root.geometry('1280x720')
 
-        #CREATE INFO BUTTON
+        # CREATE INFO BUTTON
         self.infobtn = tk.PhotoImage(file='info.png')
         self.tipbutton = ttk.Button(self.root, image=self.infobtn)
         self.tip = Hovertip(self.tipbutton, self.info, hover_delay=500)
 
-        #CREATE FLAG BUTTON
+        # CREATE FLAG BUTTON
         self.flagbtn = tk.PhotoImage(file='flag.png')
-        self.flagbutton = ttk.Button(self.root, image=self.flagbtn, command=self.flagWindow)
+        self.flagbutton = ttk.Button(self.root,
+                                     image=self.flagbtn,
+                                     command=self.flagWindow)
 
-        #CREATE YES/NO BUTTONS
-        self.yesbutton = ttk.Button(self.root, text='Yes', command=self.yesButton)
+        # CREATE YES/NO BUTTONS
+        self.yesbutton = ttk.Button(self.root,
+                                    text='Yes', command=self.yesButton)
         self.nobutton = ttk.Button(self.root, text='No', command=self.noButton)
 
-        #CREATE TITLE AND QUESTION
-        self.mapheader = ttk.Label(self.root, text=self.maptype, font=('Times New Roman', 24, 'bold'))
-        self.questionText = ttk.Label(self.root, text='', font=('Times New Roman', 14), wraplength=1200)
+        # CREATE TITLE AND QUESTION
+        self.mapheader = ttk.Label(self.root,
+                                   text=self.maptype,
+                                   font=('Times New Roman', 24, 'bold'))
+        self.questionText = ttk.Label(self.root,
+                                      text='', font=('Times New Roman', 14),
+                                      wraplength=1200)
 
-        #ARRANGE ELEMENTS
+        # ARRANGE ELEMENTS
         self.mapheader.place(x=10, y=0)
         self.questionText.place(x=10, y=40)
         self.tipbutton.place(x=265, y=100)
         self.yesbutton.place(x=30, y=100)
         self.nobutton.place(x=115, y=100)
         self.flagbutton.place(x=210, y=100)
-        
-        #UPDATE GUI
+
+        # UPDATE GUI
         self.updateGUI()
-        
+
         self.root.mainloop()
 
     def updateGUI(self):
@@ -73,7 +81,8 @@ class QuestionGUI(threading.Thread):
         self.window = tk.Toplevel(self.root)
         self.entry = tk.StringVar()
         self.window.title('Flag')
-        ttk.Label(self.window, text='Why did you flag this?', font=('Times New Roman', 14)).pack()
+        ttk.Label(self.window, text='Why did you flag this?',
+                  font=('Times New Roman', 14)).pack()
         ttk.Entry(self.window, textvariable=self.entry).pack()
         ttk.Button(self.window, text='Ok', command=self.closeFlagWindow).pack()
 
