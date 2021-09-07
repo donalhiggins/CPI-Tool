@@ -57,18 +57,18 @@ class QuestionGUI():
         # CREATE TITLE AND QUESTION
         self.mapheader = ttk.Label(self.root,
                                    text=self.maptype,
-                                   font=('Times New Roman', 24, 'bold'))
+                                   font=('Times New Roman', 30, 'bold'))
         self.questionText = ttk.Label(self.root,
-                                      text=self.question, font=('Times New Roman', 14),
+                                      text=self.question, font=('Times New Roman', 16),
                                       wraplength=1200)
 
-        # ARRANGE ELEMENTS
-        self.mapheader.place(x=10, y=0)
-        self.questionText.place(x=10, y=40)
-        self.tipbutton.place(x=265, y=100)
-        self.yesbutton.place(x=30, y=100)
-        self.nobutton.place(x=115, y=100)
-        self.flagbutton.place(x=210, y=100)
+        # ARRANGE ELEMENTS 
+        self.mapheader.grid(row=0, column=0, pady=10, padx=5, columnspan=1000, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.questionText.grid(row=1, column=0, pady=10, padx=10, columnspan=1000, rowspan=2, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.tipbutton.grid(row=3, column=3, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.yesbutton.grid(row=3, column=0, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.nobutton.grid(row=3, column=1, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.flagbutton.grid(row=3, column=2, sticky=tk.N+tk.S+tk.W+tk.E)
 
         # UPDATES GUI
         self.updateGUI()
@@ -84,7 +84,7 @@ class QuestionGUI():
             # IF HITS CRITICAL / OK GOES TO NEXT MAP   
             if not isinstance(self.output, int):
                 if self.mapnum == 14:
-                    print(self.flags)
+                    print(self.critical)
                 self.addCritical()
                 self.mapnum += 1
                 self.maptype = self.maps[self.mapnum]
