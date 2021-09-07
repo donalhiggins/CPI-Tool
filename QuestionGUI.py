@@ -1,30 +1,38 @@
 import tkinter as tk
 from tkinter import ttk
 from idlelib.tooltip import Hovertip
-import threading
 from ttkthemes import ThemedTk
+import json
 
-
-class QuestionGUI(threading.Thread):
+class QuestionGUI():
     flags = []
+    critTrack = ''
     question = 'temp_question'
     info = 'temp_info'
-    questionText = None
     isChange = False
-    maptype = 'temp'
-    answer = False
-    answered = False
+    maptype = 'temp_map'
     critical = []
+    questions = {}
+    maps = []
+    output = 0
+    mapnum = 0
 
     def __init__(self):
-        t1 = threading.Thread(target=self.createGUI)
-        t1.start()
+        # READS IN DICTIONARY AND LIST FOR QUESTIONS
+        with open('maps_list.txt') as myFile:
+            self.maps = myFile.readline().split(',')
+        with open('questions_dict.txt') as myFile:
+            self.questions = myFile.read()
+        self.questions = json.loads(self.questions)
+        self.maptype = self.maps[self.mapnum]
+        self.question = self.questions[self.maptype][0][0]
+
+        self.createGUI()
 
     def createGUI(self):
         # CREATE root
         self.root = ThemedTk(theme='arc')
         self.root['background'] = '#f5f6f7'
-        self.root.protocol('WM_DELETE_WINDOW', self.callback)
         self.logo = tk.PhotoImage(file='trigon.png')
         self.root.iconphoto(True, self.logo)
         self.root.title('CPI Tool')
@@ -51,7 +59,7 @@ class QuestionGUI(threading.Thread):
                                    text=self.maptype,
                                    font=('Times New Roman', 24, 'bold'))
         self.questionText = ttk.Label(self.root,
-                                      text='', font=('Times New Roman', 14),
+                                      text=self.question, font=('Times New Roman', 14),
                                       wraplength=1200)
 
         # ARRANGE ELEMENTS
@@ -62,20 +70,30 @@ class QuestionGUI(threading.Thread):
         self.nobutton.place(x=115, y=100)
         self.flagbutton.place(x=210, y=100)
 
-        # UPDATE GUI
+        # UPDATES GUI
         self.updateGUI()
 
         self.root.mainloop()
 
     def updateGUI(self):
+        # CHECKS IF A CHANGE IS NEEDED AND THEN EDITS GUI
         if self.isChange:
             self.questionText.config(text=self.question)
             self.mapheader.config(text=self.maptype)
-            self.tip.text = self.info
-        self.root.after(1000, self.updateGUI)
+            self.tip.text = self.info    
+            # IF HITS CRITICAL / OK GOES TO NEXT MAP   
+            if not isinstance(self.output, int):
+                if self.mapnum == 14:
+                    print(self.flags)
+                self.addCritical()
+                self.mapnum += 1
+                self.maptype = self.maps[self.mapnum]
+                self.output = 0
+                self.question = self.questions[self.maptype][0][0]
+            else:
+                self.critTrack = self.question
 
-    def callback(self):
-        self.root.quit()
+        self.root.after(100, self.updateGUI)
 
     def flagWindow(self):
         self.window = tk.Toplevel(self.root)
@@ -91,17 +109,16 @@ class QuestionGUI(threading.Thread):
         self.window.destroy()
 
     def yesButton(self):
-        self.answer = True
-        self.answered = True
-        self.getAnswer()
-
+        self.isChange = True
+        self.output = self.questions[self.maptype][self.output][1][1]
+        if isinstance(self.output, int):
+            self.question = self.questions[self.maptype][self.output][0]
+        
     def noButton(self):
-        self.answer = False
-        self.answered = True
-        self.getAnswer()
-
-    def getAnswer(self):
-        return self.answer
+        self.isChange = True
+        self.output = self.questions[self.maptype][self.output][1][0]
+        if isinstance(self.output, int):
+            self.question = self.questions[self.maptype][self.output][0]
 
     def updateQuestion(self, quest, inf, mapt):
         self.isChange = True
@@ -109,5 +126,6 @@ class QuestionGUI(threading.Thread):
         self.info = inf
         self.maptype = mapt
 
-    def addCritical(self, questnum):
-        self.critical.append(questnum)
+    def addCritical(self):
+        if self.output == 'Critical':
+            self.critical.append(self.critTrack)
