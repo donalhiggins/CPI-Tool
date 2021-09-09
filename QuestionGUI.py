@@ -220,7 +220,7 @@ class QuestionGUI():
         self.endString = self.endString + '\nCritical Questions:\n'
         for i in self.critical:
             self.endString = self.endString + i[0] + ' : ' + i[1] + '\n'
-        self.testName = "Results/" + self.testName.replace(' ', '_') + '.txt'
+        self.testName = "Reports/" + self.testName.replace(' ', '_') + '.txt'
 
     def endBox(self):
         self.root.destroy()
