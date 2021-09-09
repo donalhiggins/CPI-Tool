@@ -19,7 +19,9 @@ class QuestionGUI():
     output = 0
     mapnum = 0
     skippedQuestions = []
+    skippedQuest = False
     isSkip = False
+    skipCount = 0
     endString = ''
     testName = ''
 
@@ -94,10 +96,10 @@ class QuestionGUI():
         # ARRANGE ELEMENTS 
         self.mapheader.grid(row=0, column=0, pady=10, padx=5, columnspan=1000, sticky=tk.N+tk.S+tk.W+tk.E)
         self.questionText.grid(row=1, column=0, pady=10, padx=10, columnspan=1000, rowspan=2, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.tipbutton.grid(row=3, column=3, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.tipbutton.grid(row=3, column=2, sticky=tk.N+tk.S+tk.W+tk.E)
         self.yesbutton.grid(row=3, column=0, sticky=tk.N+tk.S+tk.W+tk.E)
         self.nobutton.grid(row=3, column=1, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.flagbutton.grid(row=3, column=2, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.flagbutton.grid(row=3, column=3, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
 
         # UPDATES GUI
         self.updateGUI()
@@ -106,23 +108,40 @@ class QuestionGUI():
         try:
             # CHECKS IF A CHANGE IS NEEDED AND THEN EDITS GUI
             if self.isChange:
-                self.questionText.config(text=self.question)
-                self.mapheader.config(text=self.maptype)
-                self.tip.text = self.info    
+                if self.skippedQuest:
+                    self.questionText.config(text=self.question)
+                    self.mapheader.config(text='Skipped: ' + self.maptype)
+                    self.tip.text = self.info    
+                else:
+                    self.questionText.config(text=self.question)
+                    self.mapheader.config(text=self.maptype)
+                    self.tip.text = self.info                        
                 # IF HITS CRITICAL / OK GOES TO NEXT MAP AND SKIPS IF NEEDED
                 if not isinstance(self.output, int) or self.isSkip:
                     if self.mapnum == 14:
-                        if len(self.skippedQuestions) == 0:
+                        if len(self.skippedQuestions) == self.skipCount:
                             self.endBox()
                         else:
-                            self.endBox()
+                            self.skippedQuest = True
+                            self.doSkipped()
                     else:
-                        self.addCritical()
-                        self.mapnum += 1
-                        self.maptype = self.maps[self.mapnum]
-                        self.output = 0
-                        self.question = self.questions[self.maptype][0][0]
-                        self.isSkip = False
+                        if self.skippedQuest:
+                            try:
+                                self.addCritical()
+                                self.skipCount += 1
+                                self.mapnum = self.skippedQuestions[self.skipCount][0]
+                                self.output = self.skippedQuestions[self.skipCount][1]
+                                self.maptype = self.maps[self.mapnum]
+                                self.question = self.questions[self.maptype][0][0]
+                            except IndexError:
+                                self.endBox()
+                        else:
+                            self.addCritical()
+                            self.mapnum += 1
+                            self.maptype = self.maps[self.mapnum]
+                            self.output = 0
+                            self.question = self.questions[self.maptype][0][0]
+                            self.isSkip = False
                 else:
                     self.critTrack = self.question
         except tk.TclError:
@@ -161,6 +180,16 @@ class QuestionGUI():
         self.isChange = True
         self.isSkip = True
         self.window.destroy()
+
+    def doSkipped(self):
+        self.flagbutton.destroy()
+        self.mapnum = self.skippedQuestions[self.skipCount][0]
+        self.output = self.skippedQuestions[self.skipCount][1]
+        self.maptype = self.maps[self.mapnum]
+        self.question = self.questions[self.maptype][self.output][0]
+        self.questionText.config(text=self.question)
+        self.mapheader.config(text='Skipped: ' + self.maptype)
+        self.tip.text = self.info    
 
     def closeCritWindow(self):
         self.critical.append([self.critTrack, self.entry.get()])
