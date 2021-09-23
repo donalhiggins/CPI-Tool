@@ -1,3 +1,4 @@
+from os import _wrap_close
 import tkinter as tk
 from tkinter import ttk
 from tkinter.constants import LEFT, RIGHT, TOP
@@ -34,7 +35,9 @@ class QuestionGUI():
         self.questions = json.loads(self.questions)
         self.maptype = self.maps[self.mapnum]
         self.question = self.questions[self.maptype][0][0]
-        
+        self.info = self.questions[self.maptype][self.output][2]
+        self.info = self.wrapinfo(self.info)
+
         # CREATES root AND WELCOME WIDGETS
         self.root = ThemedTk(theme='arc')
         self.name = tk.StringVar()
@@ -133,6 +136,8 @@ class QuestionGUI():
                                 self.output = self.skippedQuestions[self.skipCount][1]
                                 self.maptype = self.maps[self.mapnum]
                                 self.question = self.questions[self.maptype][0][0]
+                                self.info = self.questions[self.maptype][0][2]
+                                self.info = self.wrapinfo(self.info)
                             except IndexError:
                                 self.endBox()
                         else:
@@ -141,6 +146,8 @@ class QuestionGUI():
                             self.maptype = self.maps[self.mapnum]
                             self.output = 0
                             self.question = self.questions[self.maptype][0][0]
+                            self.info = self.questions[self.maptype][0][2]
+                            self.info = self.wrapinfo(self.info)
                             self.isSkip = False
                 else:
                     self.critTrack = self.question
@@ -187,6 +194,8 @@ class QuestionGUI():
         self.output = self.skippedQuestions[self.skipCount][1]
         self.maptype = self.maps[self.mapnum]
         self.question = self.questions[self.maptype][self.output][0]
+        self.info = self.questions[self.maptype][self.output][2]
+        self.info = self.wrapinfo(self.info)
         self.questionText.config(text=self.question)
         self.mapheader.config(text='Skipped: ' + self.maptype)
         self.tip.text = self.info    
@@ -205,6 +214,8 @@ class QuestionGUI():
             self.output = self.questions[self.maptype][self.output][1][1]
         if isinstance(self.output, int):
             self.question = self.questions[self.maptype][self.output][0]
+            self.info = self.questions[self.maptype][self.output][2]
+            self.info = self.wrapinfo(self.info)
         
     def noButton(self):
         self.isChange = True
@@ -212,6 +223,8 @@ class QuestionGUI():
             self.output = self.questions[self.maptype][self.output][1][0]
         if isinstance(self.output, int):
             self.question = self.questions[self.maptype][self.output][0]
+            self.info = self.questions[self.maptype][self.output][2]
+            self.info = self.wrapinfo(self.info)
 
     def parseInfo(self):
         self.endString = 'Flagged Questions:\n'
@@ -229,3 +242,20 @@ class QuestionGUI():
         self.TextBox = ttk.Label(self.end, text=self.endString, font=('Times New Roman', 16)).pack()
         self.file = open(self.testName, 'x')
         self.file.write(self.endString)
+
+    def wrapinfo(self, txt):
+        if txt.find('\n') > -1:
+            return txt
+        temp = txt.split(' ')
+        cnt = 0
+        length = len(temp)
+        output = ''
+        if length < 15:
+            return txt
+        while length >= 15:
+            cnt += 1
+            output += ' '.join(temp[15 * (cnt - 1):15 * cnt]) + '\n' 
+            length -= 15
+        if len(temp) % 15 != 0:
+            output += ' '.join(temp[cnt * 15:])
+        return output
