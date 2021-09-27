@@ -7,6 +7,7 @@ from ttkthemes import ThemedTk
 import json
 from PIL import ImageTk, Image
 
+
 class QuestionGUI():
     flags = []
     critTrack = ''
@@ -30,7 +31,7 @@ class QuestionGUI():
         # READS IN DICTIONARY AND LIST FOR QUESTIONS
         with open('maps_list.txt') as myFile:
             self.maps = myFile.readline().split(',')
-        with open('questions_dict.txt') as myFile:
+        with open('questions_dict.txt', encoding='utf8') as myFile:
             self.questions = myFile.read()
         self.questions = json.loads(self.questions)
         self.maptype = self.maps[self.mapnum]
@@ -41,14 +42,18 @@ class QuestionGUI():
         # CREATES root AND WELCOME WIDGETS
         self.root = ThemedTk(theme='arc')
         self.name = tk.StringVar()
-        self.welcome = ttk.Label(self.root, text='Trigon Cyber CPI Tool', font=('Times New Roman', 30, 'bold'))
-        self.startbutton = ttk.Button(self.root, text='Start', command=self.createGUI)
-        self.enterName = ttk.Label(self.root, text='Enter the name of the utility you are testing.', font=('Times New Roman', 18))
+        self.welcome = ttk.Label(self.root, text='Trigon Cyber CPI Tool',
+                                 font=('Times New Roman', 30, 'bold'))
+        self.startbutton = ttk.Button(self.root,
+                                      text='Start', command=self.createGUI)
+        self.enterName = ttk.Label(self.root,
+                                   text='Enter the name of the utility you are testing.',
+                                   font=('Times New Roman', 18))
         self.nameBox = ttk.Entry(self.root, textvariable=self.name)
         self.bigPhoto = ImageTk.PhotoImage(Image.open('bigtrigon.jpeg'))
         self.biglogo = ttk.Label(self.root, image=self.bigPhoto)
         self.startPage()
-    
+
     def startPage(self):
         # DECORATES root WITH WELCOME WIDGETS
         self.root['background'] = '#f5f6f7'
@@ -56,11 +61,11 @@ class QuestionGUI():
         self.root.iconphoto(True, self.logo)
         self.root.title('CPI Tool')
         self.root.geometry('1280x720')
-        self.welcome.grid(row=0,column=0)
-        self.enterName.grid(row=1,column=0)
-        self.nameBox.grid(row=2,column=0)
-        self.startbutton.grid(row=3,column=0)
-        self.biglogo.grid(row=4,column=0)
+        self.welcome.grid(row=0, column=0)
+        self.enterName.grid(row=1, column=0)
+        self.nameBox.grid(row=2, column=0)
+        self.startbutton.grid(row=3, column=0)
+        self.biglogo.grid(row=4, column=0)
         self.root.mainloop()
 
     def createGUI(self):
@@ -93,16 +98,26 @@ class QuestionGUI():
                                    text=self.maptype,
                                    font=('Times New Roman', 30, 'bold'))
         self.questionText = ttk.Label(self.root,
-                                      text=self.question, font=('Times New Roman', 16),
+                                      text=self.question,
+                                      font=('Times New Roman', 16),
                                       wraplength=1200)
 
-        # ARRANGE ELEMENTS 
-        self.mapheader.grid(row=0, column=0, pady=10, padx=5, columnspan=1000, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.questionText.grid(row=1, column=0, pady=10, padx=10, columnspan=1000, rowspan=2, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.tipbutton.grid(row=3, column=2, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.yesbutton.grid(row=3, column=0, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.nobutton.grid(row=3, column=1, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.flagbutton.grid(row=3, column=3, padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
+        # ARRANGE ELEMENTS
+        self.mapheader.grid(row=0, column=0,
+                            pady=10, padx=5,
+                            columnspan=1000, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.questionText.grid(row=1, column=0,
+                               pady=10, padx=10,
+                               columnspan=1000, rowspan=2,
+                               sticky=tk.N+tk.S+tk.W+tk.E)
+        self.tipbutton.grid(row=3, column=2,
+                            sticky=tk.N+tk.S+tk.W+tk.E)
+        self.yesbutton.grid(row=3, column=0,
+                            sticky=tk.N+tk.S+tk.W+tk.E)
+        self.nobutton.grid(row=3, column=1,
+                           padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
+        self.flagbutton.grid(row=3, column=3,
+                             padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
 
         # UPDATES GUI
         self.updateGUI()
@@ -114,11 +129,11 @@ class QuestionGUI():
                 if self.skippedQuest:
                     self.questionText.config(text=self.question)
                     self.mapheader.config(text='Skipped: ' + self.maptype)
-                    self.tip.text = self.info    
+                    self.tip.text = self.info
                 else:
                     self.questionText.config(text=self.question)
                     self.mapheader.config(text=self.maptype)
-                    self.tip.text = self.info                        
+                    self.tip.text = self.info
                 # IF HITS CRITICAL / OK GOES TO NEXT MAP AND SKIPS IF NEEDED
                 if not isinstance(self.output, int) or self.isSkip:
                     if self.mapnum == 14:
@@ -164,8 +179,10 @@ class QuestionGUI():
         ttk.Label(self.window, text='Why did you flag this?',
                   font=('Times New Roman', 14)).pack()
         ttk.Entry(self.window, textvariable=self.entry).pack(side=TOP)
-        ttk.Button(self.window, text='Skip', command=self.skip).pack(side=RIGHT)
-        ttk.Button(self.window, text='Ok', command=self.closeFlagWindow).pack(side=LEFT)
+        ttk.Button(self.window, text='Skip',
+                   command=self.skip).pack(side=RIGHT)
+        ttk.Button(self.window, text='Ok',
+                   command=self.closeFlagWindow).pack(side=LEFT)
 
     def closeFlagWindow(self):
         self.flags.append([self.question, self.entry.get()])
@@ -175,7 +192,8 @@ class QuestionGUI():
         self.window = tk.Toplevel(self.root, bg='#f5f6f7')
         self.entry = tk.StringVar()
         self.window.title('Critical')
-        ttk.Label(self.window, text=('Why was this critical? Question: ' + self.critTrack),
+        ttk.Label(self.window,
+                  text=('Why was this critical? Question: ' + self.critTrack),
                   font=('Times New Roman', 14)).pack()
         ttk.Entry(self.window, textvariable=self.entry).pack()
         ttk.Button(self.window, text='Ok', command=self.closeCritWindow).pack()
@@ -198,7 +216,7 @@ class QuestionGUI():
         self.info = self.wrapinfo(self.info)
         self.questionText.config(text=self.question)
         self.mapheader.config(text='Skipped: ' + self.maptype)
-        self.tip.text = self.info    
+        self.tip.text = self.info
 
     def closeCritWindow(self):
         self.critical.append([self.critTrack, self.entry.get()])
@@ -216,7 +234,7 @@ class QuestionGUI():
             self.question = self.questions[self.maptype][self.output][0]
             self.info = self.questions[self.maptype][self.output][2]
             self.info = self.wrapinfo(self.info)
-        
+
     def noButton(self):
         self.isChange = True
         if isinstance(self.output, int):
@@ -239,7 +257,8 @@ class QuestionGUI():
         self.root.destroy()
         self.end = ThemedTk(theme='arc').title('End Screen')
         self.parseInfo()
-        self.TextBox = ttk.Label(self.end, text=self.endString, font=('Times New Roman', 16)).pack()
+        ttk.Label(self.end, text=self.endString,
+                  font=('Times New Roman', 16)).pack()
         self.file = open(self.testName, 'x')
         self.file.write(self.endString)
 
@@ -254,7 +273,7 @@ class QuestionGUI():
             return txt
         while length >= 15:
             cnt += 1
-            output += ' '.join(temp[15 * (cnt - 1):15 * cnt]) + '\n' 
+            output += ' '.join(temp[15 * (cnt - 1):15 * cnt]) + '\n'
             length -= 15
         if len(temp) % 15 != 0:
             output += ' '.join(temp[cnt * 15:])

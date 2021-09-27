@@ -1,7 +1,7 @@
 from QuestionGUI import QuestionGUI
 
 def main():
-    window = QuestionGUI()
+    QuestionGUI()
 
 if __name__ == "__main__":
     main()
