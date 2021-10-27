@@ -1,12 +1,14 @@
-import os
 import json
+import os
 import tkinter as tk
-from saveQuestions import saveQuestions
 from tkinter import ttk
 from tkinter.constants import LEFT, RIGHT, TOP
+
 from idlelib.tooltip import Hovertip
+from PIL import Image, ImageTk
 from ttkthemes import ThemedTk
-from PIL import ImageTk, Image
+
+from saveQuestions import saveQuestions
 
 
 class QuestionGUI():
@@ -45,7 +47,6 @@ class QuestionGUI():
         self.info = self.questions[self.maptype][0][2]
         self.info = self.wrapinfo(self.info)
 
-        
         # CREATES LIST OF POSSBILE FILES TO RESUME
         self.savedFiles = os.listdir('Reports/')
         
@@ -175,27 +176,33 @@ class QuestionGUI():
         self.updateGUI()
 
     def checkSave(self):
+        # CHECKS IF A SAVE FILE IS SELECTED
         if self.saveFile != 'Select a save':
+            # READS IN SAVE FILE
             self.save.readData(self.saveFile)
             temp = self.save.resumeLastQuestion()
             self.testName = self.saveFile
             self.mapnum = temp[0]
-
-            print(temp)
             self.maptype = self.maps[self.mapnum]
-            
-            self.question = self.questions[self.maptype][int(temp[1])][0]
-            self.info = self.questions[self.maptype][int(temp[1])][2]
+            self.question = self.questions[self.maptype][temp[1]][0]
+            self.info = self.questions[self.maptype][temp[1]][2]
             self.info = self.wrapinfo(self.info)
             self.isNew = True
-            self.fromSave = True
             self.isChange = True
-            self.output = self.questions[self.maptype][int(temp[1])][0] if temp[2] == 'y' else self.questions[self.maptype][int(temp[1])][1]
+            # UPDATES TO NEXT QUESTION
+            if temp[2] == 'y' and isinstance(self.questions[self.maptype][temp[1]][1][0], int):
+                self.output = self.questions[self.maptype][temp[1]][1][1]
+            elif temp[2] == 'n' and isinstance(self.questions[self.maptype][temp[1]][1][1], int):
+                self.output = self.questions[self.maptype][temp[1]][1][0]
+            else:
+                self.output = temp[2]
             if isinstance(self.output, int):
                 self.question = self.questions[self.maptype][self.output][0]
                 self.info = self.questions[self.maptype][self.output][2]
                 self.info = self.wrapinfo(self.info)
-            print(self.question)
+            self.fromSave = True if isinstance(self.output, int) else False
+            self.skippedQuestions = self.save.skipList()
+            self.isChange = True
 
     def updateGUI(self):
         try:
@@ -212,8 +219,6 @@ class QuestionGUI():
                     self.save.mergeFlgCrit(self.flags, self.critical)
                 # IF HITS CRITICAL / OK GOES TO NEXT MAP AND SKIPS IF NEEDED
                 if (not isinstance(self.output, int) or self.isSkip) and not self.fromSave:
-                    
-
                     if self.mapnum == 14:
                         if len(self.skippedQuestions) == self.skipCount:
                             self.endBox()
@@ -242,13 +247,19 @@ class QuestionGUI():
                             self.info = self.questions[self.maptype][0][2]
                             self.info = self.wrapinfo(self.info)
                             self.isSkip = False
+                            if not self.isNew and len(self.skippedQuestions) > 0 and self.mapnum == self.skippedQuestions[-1][0]:
+                                self.mapnum += 1
+                                self.maptype = self.maps[self.mapnum]
+                                self.question = self.questions[self.maptype][0][0]
+                                self.info = self.questions[self.maptype][0][2]
+                                self.info = self.wrapinfo(self.info)
                 else:
                     self.critTrack = self.question
         except tk.TclError:
             self.file = open(self.testName, 'w')
             self.file.write(self.endString)
 
-        self.root.after(100, self.updateGUI)
+        self.root.after(17, self.updateGUI)
 
     def flagWindow(self):
         self.window = tk.Toplevel(self.root, bg='#f5f6f7')
@@ -264,6 +275,7 @@ class QuestionGUI():
 
     def closeFlagWindow(self):
         self.flags.append([self.question, self.entry.get()])
+        self.save.addFlag([self.question, self.entry.get()])
         self.window.destroy()
 
     def critWindow(self):
@@ -279,6 +291,7 @@ class QuestionGUI():
 
     def skip(self):
         self.flags.append([self.question, self.entry.get()])
+        self.save.addSkip(self.output, self.mapnum)
         self.skippedQuestions.append([self.mapnum, self.output])
         self.isChange = True
         self.isSkip = True
@@ -297,6 +310,7 @@ class QuestionGUI():
         self.tip.text = self.info
 
     def closeCritWindow(self):
+        self.save.addCrit([self.critTrack, self.entry.get()])
         self.critical.append([self.critTrack, self.entry.get()])
         self.window.destroy()
 
@@ -322,7 +336,6 @@ class QuestionGUI():
         self.isChange = True
         self.fromSave = False
         self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer)
-
         if isinstance(self.output, int):
             self.output = self.questions[self.maptype][self.output][1][0]
         if isinstance(self.output, int):
@@ -337,7 +350,7 @@ class QuestionGUI():
         self.endString = self.endString + '\nCritical Questions:\n'
         for i in self.critical:
             self.endString = self.endString + i[0] + ' : ' + i[1] + '\n'
-        self.testName = "Reports/" + self.testName.replace(' ', '_') + '.txt'
+        self.testName = "Reports/" + self.testName.replace(' ', '_')  + '/' + self.testName.replace(' ', '_') + '.txt'
 
     def endBox(self):
         self.root.destroy()
