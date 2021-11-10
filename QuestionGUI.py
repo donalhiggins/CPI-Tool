@@ -202,6 +202,9 @@ class QuestionGUI():
                 self.info = self.wrapinfo(self.info)
             self.fromSave = True if isinstance(self.output, int) else False
             self.skippedQuestions = self.save.skipList()
+            self.flags = self.save.flagList()
+            self.critical = self.save.critList()
+            print(self.critical)
             self.isChange = True
 
     def updateGUI(self):
@@ -291,7 +294,7 @@ class QuestionGUI():
 
     def skip(self):
         self.flags.append([self.question, self.entry.get()])
-        self.save.addSkip(self.output, self.mapnum)
+        self.save.addSkip(self.output, self.mapnum, self.question, self.entry.get())
         self.skippedQuestions.append([self.mapnum, self.output])
         self.isChange = True
         self.isSkip = True
@@ -317,7 +320,7 @@ class QuestionGUI():
     def addCritical(self):
         if self.output == 'Critical':
             self.critWindow()
-
+    
     def yesButton(self):
         self.answer = 'y'
         self.isChange = True
@@ -350,15 +353,20 @@ class QuestionGUI():
         self.endString = self.endString + '\nCritical Questions:\n'
         for i in self.critical:
             self.endString = self.endString + i[0] + ' : ' + i[1] + '\n'
-        self.testName = "Reports/" + self.testName.replace(' ', '_')  + '/' + self.testName.replace(' ', '_') + '.txt'
+        self.testNameFile = "Reports/" + self.testName.replace(' ', '_')  + '/' + self.testName.replace(' ', '_') + '.txt'
 
     def endBox(self):
         self.root.destroy()
-        self.end = ThemedTk(theme='arc').title('End Screen')
+        self.end = ThemedTk(theme='arc')
+        self.end.title('End')
+        self.save.createSaveFile(self.testName, not self.isNew)
         self.parseInfo()
+        print(self.endString)
+        self.save.genPDF(self.testName, self.endString)
         ttk.Label(self.end, text=self.endString,
                   font=('Times New Roman', 16)).pack()
-        self.file = open(self.testName, 'x')
+        
+        self.file = open(self.testNameFile, 'x')
         self.file.write(self.endString)
         self.end.mainloop()
 
