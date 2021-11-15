@@ -125,7 +125,7 @@ class saveQuestions():
         if text != '':
             textcan = canvas.Canvas(stringPacket, pagesize=(792, 612))
             textobj = textcan.beginText(10, 550)
-            textobj.setFont('Helvetica', 12)
+            textobj.setFont('Times New Roman', 12)
             text = text.split('\n')
             for line in text:
                 textobj.textLine(line)
