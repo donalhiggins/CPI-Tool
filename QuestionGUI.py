@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk
 from tkinter.constants import LEFT, RIGHT, TOP
@@ -37,9 +38,11 @@ class QuestionGUI():
 
     def __init__(self):
         # READS IN DICTIONARY AND LIST FOR QUESTIONS
-        with open('maps_list.txt', encoding='utf8') as myFile:
+        
+        
+        with open('src/maps_list.txt', encoding='utf8') as myFile:
             self.maps = myFile.readline().split(',')
-        with open('questions_dict.txt', encoding='utf8') as myFile:
+        with open('src/questions_dict.txt', encoding='utf8') as myFile:
             self.questions = myFile.read()
         self.questions = json.loads(self.questions)
         self.maptype = self.maps[self.mapnum]
@@ -61,7 +64,7 @@ class QuestionGUI():
                                    text='Enter the name of the utility you are testing.',
                                    font=('Times New Roman', 18))
         self.nameBox = ttk.Entry(self.root, textvariable=self.name)
-        self.bigPhoto = ImageTk.PhotoImage(Image.open('bigtrigon.jpeg'))
+        self.bigPhoto = ImageTk.PhotoImage(Image.open('src/bigtrigon.jpeg'))
         self.biglogo = ttk.Label(self.root, image=self.bigPhoto)
         self.instructionButton = ttk.Button(self.root,
                                             text='Help',
@@ -78,7 +81,7 @@ class QuestionGUI():
             
         # DECORATES root WITH WELCOME WIDGETS
         self.root['background'] = '#f5f6f7'
-        self.logo = tk.PhotoImage(file='trigon.png')
+        self.logo = tk.PhotoImage(file='src/trigon.png')
         self.root.iconphoto(True, self.logo)
         self.root.title('CPI Tool')
         self.root.geometry('1280x720')
@@ -126,12 +129,12 @@ class QuestionGUI():
         self.checkSave()
 
         # CREATE INFO BUTTON
-        self.infobtn = tk.PhotoImage(file='info.png')
+        self.infobtn = tk.PhotoImage(file='src/info.png')
         self.tipbutton = ttk.Button(self.root, image=self.infobtn)
         self.tip = Hovertip(self.tipbutton, self.info, hover_delay=500)
 
         # CREATE FLAG BUTTON
-        self.flagbtn = tk.PhotoImage(file='flag.png')
+        self.flagbtn = tk.PhotoImage(file='src/flag.png')
         self.flagbutton = ttk.Button(self.root,
                                      image=self.flagbtn,
                                      command=self.flagWindow)

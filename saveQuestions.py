@@ -103,7 +103,7 @@ class saveQuestions():
     def genPDF(self, name, text):
         packet = io.BytesIO()
         stringPacket = io.BytesIO()
-        img = 'black.jpeg'
+        img = 'src/black.jpeg'
         can = canvas.Canvas(packet, pagesize=letter)
         questions = self.progress[['Map Number', 'Question Number', 'Answer']].dropna()
         for index, rows in questions.iterrows():
@@ -116,7 +116,7 @@ class saveQuestions():
         packet.seek(0)
 
         new_pdf = PdfFileReader(packet)
-        existing_pdf = PdfFileReader(open('CPI Form.pdf', 'rb'))
+        existing_pdf = PdfFileReader(open('src/CPI Form.pdf', 'rb'))
         output = PdfFileWriter()
         page = existing_pdf.getPage(0)
         page.mergePage(new_pdf.getPage(0))
