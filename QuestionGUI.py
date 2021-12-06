@@ -55,10 +55,11 @@ class QuestionGUI():
         
         # CREATES root AND WELCOME WIDGETS
         self.root = ThemedTk(theme='arc')
+        self.buttons = tk.Frame(self.root)
         self.name = tk.StringVar()
         self.welcome = ttk.Label(self.root, text='Trigon Cyber CPI Tool',
                                  font=('Times New Roman', 30, 'bold'))
-        self.startbutton = ttk.Button(self.root,
+        self.startbutton = ttk.Button(self.buttons,
                                       text='Start', command=self.startQuestions)
         self.enterName = ttk.Label(self.root,
                                    text='Enter the name of the utility you are testing.',
@@ -66,15 +67,15 @@ class QuestionGUI():
         self.nameBox = ttk.Entry(self.root, textvariable=self.name)
         self.bigPhoto = ImageTk.PhotoImage(Image.open('src/bigtrigon.jpeg'))
         self.biglogo = ttk.Label(self.root, image=self.bigPhoto)
-        self.instructionButton = ttk.Button(self.root,
+        self.instructionButton = ttk.Button(self.buttons,
                                             text='Help',
                                             command=self.displayHelp)
-        self.DropDown = tk.StringVar(self.root)
+        self.DropDown = tk.StringVar(self.buttons)
         self.DropDown.set('Select a save')
         self.savedFiles.insert(0, 'Select a save')
         self.savedFiles.append('Select a save')
-        
-        self.savedList = ttk.OptionMenu(self.root, self.DropDown, *self.savedFiles)
+
+        self.savedList = ttk.OptionMenu(self.buttons, self.DropDown, *self.savedFiles)
         self.startPage()
 
     def startPage(self):
@@ -84,15 +85,16 @@ class QuestionGUI():
         self.logo = tk.PhotoImage(file='src/trigon.png')
         self.root.iconphoto(True, self.logo)
         self.root.title('CPI Tool')
-        self.root.geometry('1280x720')
+        self.root.geometry('1000x550')
 
         self.welcome.grid(row=0, column=0)
         self.enterName.grid(row=1, column=0)
         self.nameBox.grid(row=2, column=0)
-        self.startbutton.grid(row=3, column=0)
+        self.startbutton.grid(row=0, column=0)
         self.biglogo.grid(row=4, column=0)
-        self.instructionButton.grid(row=3, column=1)
-        self.savedList.grid(row=3,  column=2)
+        self.instructionButton.grid(row=0, column=1)
+        self.savedList.grid(row=0,  column=2)
+        self.buttons.grid(row=3, column=0, columnspan=3)
         self.root.mainloop()
 
     def displayHelp(self):
@@ -107,25 +109,31 @@ class QuestionGUI():
         # TODO FILL OUT INSTRUCTIONS WITH THE INFO NEEDED
         self.instructions = ttk.Label(self.helpWindow,
                                       font=('Times New Roman', 16),
-                                      text='The Critical Program Information (CPI) Tool is used to help fill out the CPI form.\n\nStart:\nThe CPI Tool asks for a name for the utility that you are testing. It uses this name to create the save file and data for your tool. You may also look at the drop-down menu to select\nany previously saved files.\n\nQuestions:\nWhen you select the start button the tool will prompt you with questions.\n\nButtons:\nThe yes and no buttons will let you answer yes and no to the questions.\nThe info button will display information that is useful pertaining to the current question that you are on.\nThe flag button presents you with two options and a dialogue box. The dialogue box allows you to add notes to any question you would like. If you want to just add notes and go back to\nthe question you can press the ‘Ok’ button in the box. The skip button will add the notes and push the current question and the rest of the current question map that you are on to the\nend of the program.\nThe pause button will save your progress for you to continue later.\nCritical:\nWhen you land on a ‘critical’ the program will prompt you to enter why you believe it was critical. This will be stored and entered in the final report.\n\nReport:\nAll reports generated will be saved in the ‘Reports’ folder in the working directory. Inside the folder there will be folders with the names of the utilities that you have tested. These folders\nwill hold a ‘.cpi’ file as a save file and when you finish with a report a pdf with the questions that you answered as well as the notes that you entered will be generated.') 
+                                      text='The Critical Program Information (CPI) Tool is used to help fill out the CPI form.\n\nStart:\nThe CPI Tool asks for a name for the utility that you are testing. It uses this name to create the save file and data for your tool. You may also look at the drop-down menu to select\nany previously saved files.\n\nQuestions:\nWhen you select the start button the tool will prompt you with questions.\n\nButtons:\nThe yes and no buttons will let you answer yes and no to the questions.\nThe info button will display information that is useful pertaining to the current question that you are on.\nThe flag button presents you with two options and a dialogue box. The dialogue box allows you to add notes to any question you would like. If you want to just add notes and go back to\nthe question you can press the ‘Ok’ button in the box. The skip button will add the notes and push the current question and the rest of the current question map that you are on to the\nend of the program.\nThe pause button will save your progress for you to continue later.\n\nCritical:\nWhen you land on a ‘critical’ the program will prompt you to enter why you believe it was critical. This will be stored and entered in the final report.\n\nReport:\nAll reports generated will be saved in the ‘Reports’ folder in the working directory. Inside the folder there will be folders with the names of the utilities that you have tested. These folders\nwill hold a ‘.cpi’ file as a save file and when you finish with a report a pdf with the questions that you answered as well as the notes that you entered will be generated.') 
         self.back = ttk.Button(self.helpWindow,
                                text='Back',
                                command=self.helpWindow.destroy)
 
         self.instructionLabel.grid(row=0, column=0)
-        self.instructions.grid(row=1, column=0)
-        self.back.grid(row=2, column=0)
+        self.instructions.grid(row=1, column=0, pady=10, padx=10)
+        self.back.grid(row=2, column=0, pady=10)
 
     def startQuestions(self):
-        # REMOVE START SCREEN
+        # GETS INPUTS FROM START SCREEN
         self.saveFile = self.DropDown.get()
         self.testName = self.name.get()
+
+        if self.saveFile == 'Select a save' and self.testName == '':
+            return
+
+        # REMOVE START SCREEN
         self.welcome.destroy()
         self.startbutton.destroy()
         self.biglogo.destroy()
         self.enterName.destroy()
         self.nameBox.destroy()
         self.instructionButton.destroy()
+        self.buttons.destroy()
         self.checkSave()
 
         # CREATE INFO BUTTON
