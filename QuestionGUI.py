@@ -2,7 +2,7 @@ import json
 import os
 import sys
 import tkinter as tk
-from tkinter import ttk
+from tkinter import BOTTOM, ttk
 from tkinter.constants import LEFT, RIGHT, TOP
 
 from idlelib.tooltip import Hovertip
@@ -32,14 +32,19 @@ class QuestionGUI():
     skipCount = 0
     endString = ''
     testName = ''
+    assessmentName = ''
     saveFile = ''
     fromSave = False
     isNew = False
+    assessmentNumber = 0
+    waitForRestartAnswer = False
+
+    waitForCritAnswer = False
+    resumedAndNeedsRestart = False
+    alreadyLoadedSave = False
 
     def __init__(self):
         # READS IN DICTIONARY AND LIST FOR QUESTIONS
-        
-        
         with open('src/maps_list.txt', encoding='utf8') as myFile:
             self.maps = myFile.readline().split(',')
         with open('src/questions_dict.txt', encoding='utf8') as myFile:
@@ -52,24 +57,36 @@ class QuestionGUI():
 
         # CREATES LIST OF POSSBILE FILES TO RESUME
         self.savedFiles = os.listdir('Reports/')
-        
+
         # CREATES root AND WELCOME WIDGETS
         self.root = ThemedTk(theme='arc')
         self.buttons = tk.Frame(self.root)
         self.name = tk.StringVar()
+        self.partName = tk.StringVar()
+        
         self.welcome = ttk.Label(self.root, text='Trigon Cyber CPI Tool',
                                  font=('Times New Roman', 30, 'bold'))
+        
         self.startbutton = ttk.Button(self.buttons,
                                       text='Start', command=self.startQuestions)
+
         self.enterName = ttk.Label(self.root,
                                    text='Enter the name of the utility you are testing.',
                                    font=('Times New Roman', 18))
         self.nameBox = ttk.Entry(self.root, textvariable=self.name)
+
+        self.partNameLabel = ttk.Label(self.root,
+                                       text='Enter the name of the part you are testing.',
+                                       font=('Times New Roman', 18))
+        self.partNameBox = ttk.Entry(self.root, textvariable=self.partName)
+
         self.bigPhoto = ImageTk.PhotoImage(Image.open('src/bigtrigon.jpeg'))
         self.biglogo = ttk.Label(self.root, image=self.bigPhoto)
+
         self.instructionButton = ttk.Button(self.buttons,
                                             text='Help',
                                             command=self.displayHelp)
+
         self.DropDown = tk.StringVar(self.buttons)
         self.DropDown.set('Select a save')
         self.savedFiles.insert(0, 'Select a save')
@@ -79,7 +96,7 @@ class QuestionGUI():
         self.startPage()
 
     def startPage(self):
-            
+
         # DECORATES root WITH WELCOME WIDGETS
         self.root['background'] = '#f5f6f7'
         self.logo = tk.PhotoImage(file='src/trigon.png')
@@ -90,11 +107,13 @@ class QuestionGUI():
         self.welcome.grid(row=0, column=0)
         self.enterName.grid(row=1, column=0)
         self.nameBox.grid(row=2, column=0)
+        self.partNameLabel.grid(row=3, column=0)
+        self.partNameBox.grid(row=4, column=0)
         self.startbutton.grid(row=0, column=0)
-        self.biglogo.grid(row=4, column=0)
+        self.biglogo.grid(row=6, column=0)
         self.instructionButton.grid(row=0, column=1)
         self.savedList.grid(row=0,  column=2)
-        self.buttons.grid(row=3, column=0, columnspan=3)
+        self.buttons.grid(row=5, column=0, columnspan=5)
         self.root.mainloop()
 
     def displayHelp(self):
@@ -119,9 +138,16 @@ class QuestionGUI():
         self.back.grid(row=2, column=0, pady=10)
 
     def startQuestions(self):
+        # ADDS ONE TO ASSESSMENT NUMBER
+        self.assessmentNumber += 1
+
+        self.isChange = False
+
         # GETS INPUTS FROM START SCREEN
         self.saveFile = self.DropDown.get()
         self.testName = self.name.get()
+        self.assessmentName = self.partName.get()
+        self.partName.set('')
 
         if self.saveFile == 'Select a save' and self.testName == '':
             return
@@ -132,9 +158,14 @@ class QuestionGUI():
         self.biglogo.destroy()
         self.enterName.destroy()
         self.nameBox.destroy()
+        self.partNameLabel.destroy()
+        self.partNameBox.destroy()
         self.instructionButton.destroy()
         self.buttons.destroy()
-        self.checkSave()
+
+        # PREVENTS FROM CHECKING SAVE AFTER STARTING
+        if not self.alreadyLoadedSave:
+            self.checkSave()
 
         # CREATE INFO BUTTON
         self.infobtn = tk.PhotoImage(file='src/info.png')
@@ -152,8 +183,8 @@ class QuestionGUI():
                                     text='Yes', command=self.yesButton)
         self.nobutton = ttk.Button(self.root, text='No', command=self.noButton)
 
-        # CREATE PAUSE/EXIT BUTTON
-        self.pauseButton = ttk.Button(self.root,
+        # CREATE PAUSE BUTTON
+        self.pausebutton = ttk.Button(self.root,
                                       text='Pause', command=self.pause)
 
         # CREATE TITLE AND QUESTION
@@ -181,7 +212,7 @@ class QuestionGUI():
                            padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
         self.flagbutton.grid(row=3, column=3,
                              padx=5, sticky=tk.N+tk.S+tk.W+tk.E)
-        self.pauseButton.grid(row=3, column=4,
+        self.pausebutton.grid(row=3, column=4,
                               sticky=tk.N+tk.S+tk.W+tk.E)
 
         # UPDATES GUI
@@ -193,6 +224,8 @@ class QuestionGUI():
             # READS IN SAVE FILE
             self.save.readData(self.saveFile)
             temp = self.save.resumeLastQuestion()
+            
+            self.alreadyLoadedSave = True
             self.testName = self.saveFile
             self.mapnum = temp[0]
             self.maptype = self.maps[self.mapnum]
@@ -201,6 +234,10 @@ class QuestionGUI():
             self.info = self.wrapinfo(self.info)
             self.isNew = True
             self.isChange = True
+            # CHECKS IF FINSISHED WITH LAST ASSESSMENT AND STARTS NEW ONE IF SO
+            if temp[0] == 14 and ((temp[1] == 0 and temp[2] == 'y') or (temp[1] == 1)):
+                self.resumedAndNeedsRestart = True
+
             # UPDATES TO NEXT QUESTION
             if temp[2] == 'y' and isinstance(self.questions[self.maptype][temp[1]][1][0], int):
                 self.output = self.questions[self.maptype][temp[1]][1][1]
@@ -216,13 +253,18 @@ class QuestionGUI():
             self.skippedQuestions = self.save.skipList()
             self.flags = self.save.flagList()
             self.critical = self.save.critList()
-            print(self.critical)
             self.isChange = True
 
     def updateGUI(self):
         try:
+            # CHECKS IF RESUMED FROM SAVE AND NEEDS TO RESTART
+            if self.resumedAndNeedsRestart:
+                self.resumedAndNeedsRestart = False
+                self.waitForRestartAnswer = True
+                self.restartScreen()
+                
             # CHECKS IF A CHANGE IS NEEDED AND THEN EDITS GUI
-            if self.isChange:
+            if self.isChange and not self.waitForRestartAnswer:
                 if self.skippedQuest:
                     self.questionText.config(text=self.question)
                     self.mapheader.config(text='Skipped: ' + self.maptype)
@@ -232,11 +274,15 @@ class QuestionGUI():
                     self.mapheader.config(text=self.maptype)
                     self.tip.text = self.info
                     self.save.mergeFlgCrit(self.flags, self.critical)
+
+
                 # IF HITS CRITICAL / OK GOES TO NEXT MAP AND SKIPS IF NEEDED
                 if (not isinstance(self.output, int) or self.isSkip) and not self.fromSave:
                     if self.mapnum == 14:
+                        # IF FINISHED WITH ALL SKIPPED QUESTIONS DONE
                         if len(self.skippedQuestions) == self.skipCount:
-                            self.endBox()
+                            self.restartScreen()
+                            self.waitForRestartAnswer = True
                         else:
                             self.skippedQuest = True
                             self.doSkipped()
@@ -252,8 +298,10 @@ class QuestionGUI():
                                 self.info = self.questions[self.maptype][0][2]
                                 self.info = self.wrapinfo(self.info)
                             except IndexError:
-                                self.endBox()
-                        else:
+                                self.restartScreen()
+                                self.waitForRestartAnswer = True
+
+                        elif not self.waitForCritAnswer:
                             self.addCritical()
                             self.mapnum += 1
                             self.maptype = self.maps[self.mapnum]
@@ -262,6 +310,7 @@ class QuestionGUI():
                             self.info = self.questions[self.maptype][0][2]
                             self.info = self.wrapinfo(self.info)
                             self.isSkip = False
+                            self.waitForCritAnswer = False
                             if not self.isNew and len(self.skippedQuestions) > 0 and self.mapnum == self.skippedQuestions[-1][0]:
                                 self.mapnum += 1
                                 self.maptype = self.maps[self.mapnum]
@@ -270,10 +319,11 @@ class QuestionGUI():
                                 self.info = self.wrapinfo(self.info)
                 else:
                     self.critTrack = self.question
+        
         except tk.TclError:
             self.file = open(self.testName, 'w')
             self.file.write(self.endString)
-
+        
         self.root.after(17, self.updateGUI)
 
     def flagWindow(self):
@@ -283,29 +333,36 @@ class QuestionGUI():
         ttk.Label(self.window, text='Why did you flag this?',
                   font=('Times New Roman', 14)).pack()
         ttk.Entry(self.window, textvariable=self.entry).pack(side=TOP)
-        ttk.Button(self.window, text='Skip',
-                   command=self.skip).pack(side=RIGHT)
-        ttk.Button(self.window, text='Ok',
-                   command=self.closeFlagWindow).pack(side=LEFT)
+
+        # CHECKS IF DOING SKIPPED QUESTIONS, IF SO NO SKIP BUTTON IS CREATED
+        if self.skippedQuest:
+            ttk.Button(self.window, text='Ok',
+                   command=self.closeFlagWindow).pack(side=BOTTOM)
+        else:
+            ttk.Button(self.window, text='Ok',
+                       command=self.closeFlagWindow).pack(side=LEFT)
+            ttk.Button(self.window, text='Skip',
+                       command=self.skip).pack(side=RIGHT)
+
 
     def closeFlagWindow(self):
-        self.flags.append([self.question, self.entry.get()])
-        self.save.addFlag([self.question, self.entry.get()])
+        self.flags.append([self.assessmentNumber, self.question, self.entry.get()])
         self.window.destroy()
 
     def critWindow(self):
-        self.window = tk.Toplevel(self.root, bg='#f5f6f7')
+        self.criticalWindow = tk.Toplevel(self.root, bg='#f5f6f7')
         self.entry = tk.StringVar()
-        self.window.title('Critical')
-        ttk.Label(self.window,
+        self.criticalWindow.title('Critical')
+        ttk.Label(self.criticalWindow,
                   text=('Why was this critical? Question: ' + self.critTrack),
                   font=('Times New Roman', 14)).pack()
-        ttk.Entry(self.window, textvariable=self.entry).pack()
-        ttk.Button(self.window, text='Ok', command=self.closeCritWindow).pack()
-        self.root.wait_window(self.window)
+        ttk.Entry(self.criticalWindow, textvariable=self.entry).pack()
+        ttk.Button(self.criticalWindow, text='Ok', command=self.closeCritWindow).pack()
+        self.waitForCritAnswer = True
+        self.root.wait_window(self.criticalWindow)
 
     def skip(self):
-        self.flags.append([self.question, self.entry.get()])
+        self.flags.append([self.assessmentNumber, self.question, self.entry.get()])
         self.save.addSkip(self.output, self.mapnum, self.question, self.entry.get())
         self.skippedQuestions.append([self.mapnum, self.output])
         self.isChange = True
@@ -313,7 +370,6 @@ class QuestionGUI():
         self.window.destroy()
 
     def doSkipped(self):
-        self.flagbutton.destroy()
         self.mapnum = self.skippedQuestions[self.skipCount][0]
         self.output = self.skippedQuestions[self.skipCount][1]
         self.maptype = self.maps[self.mapnum]
@@ -327,7 +383,7 @@ class QuestionGUI():
     def closeCritWindow(self):
         self.save.addCrit([self.critTrack, self.entry.get()])
         self.critical.append([self.critTrack, self.entry.get()])
-        self.window.destroy()
+        self.criticalWindow.destroy()
 
     def addCritical(self):
         if self.output == 'Critical':
@@ -337,7 +393,7 @@ class QuestionGUI():
         self.answer = 'y'
         self.isChange = True
         self.fromSave = False
-        self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer)
+        self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer, self.assessmentName, self.assessmentNumber)
 
         if isinstance(self.output, int):
             self.output = self.questions[self.maptype][self.output][1][1]
@@ -350,7 +406,7 @@ class QuestionGUI():
         self.answer = 'n'
         self.isChange = True
         self.fromSave = False
-        self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer)
+        self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer, self.assessmentName, self.assessmentNumber)
         if isinstance(self.output, int):
             self.output = self.questions[self.maptype][self.output][1][0]
         if isinstance(self.output, int):
@@ -358,36 +414,86 @@ class QuestionGUI():
             self.info = self.questions[self.maptype][self.output][2]
             self.info = self.wrapinfo(self.info)
 
-    def parseInfo(self):
-        self.endString = 'Flagged Questions:\n'
-        for i in self.flags:
-            self.endString = self.endString + i[0] + ' : ' + i[1] + '\n'
-        self.endString = self.endString + '\nCritical Questions:\n'
-        for i in self.critical:
-            self.endString = self.endString + i[0] + ' : ' + i[1] + '\n'
-        self.testNameFile = "Reports/" + self.testName.replace(' ', '_')  + '/' + self.testName.replace(' ', '_') + '.txt'
-
     def endBox(self):
+        for after_id in self.root.tk.eval('after info').split():
+            self.root.after_cancel(after_id)
+
         self.root.destroy()
         self.end = ThemedTk(theme='arc')
         self.end.title('End')
         self.save.createSaveFile(self.testName, not self.isNew)
-        self.parseInfo()
-        print(self.endString)
-        self.save.genPDF(self.testName, self.endString)
+        self.save.genPDF(self.testName)
         ttk.Label(self.end, text=self.endString,
                   font=('Times New Roman', 16)).pack()
-        
+
+        self.testNameFile = "Reports/" + self.testName.replace(' ', '_')  + '/' + self.testName.replace(' ', '_') + '.txt'
         self.file = open(self.testNameFile, 'x')
         self.file.write(self.endString)
         self.end.mainloop()
 
-    def pause(self):
+    def pauseReport(self):
+        for after_id in self.root.tk.eval('after info').split():
+            self.root.after_cancel(after_id)
+
+        self.root.destroy()
         self.save.createSaveFile(self.testName, not self.isNew)
+
+    def restartScreen(self):
+        # REMOVE ALL OLD WIDGETS
+        self.yesbutton.grid_forget()
+        self.nobutton.grid_forget()
+        self.pausebutton.grid_forget()
+        self.tipbutton.grid_forget()
+        self.flagbutton.grid_forget()
+        self.mapheader.grid_forget()
+        self.questionText.grid_forget()
+
+        # CREATE NEW WIDGETS
+        self.restartLabel = ttk.Label(self.root, text='Did you need to do another CPI assessment?',
+                  font=('Times New Roman', 20))
+        self.restartYes = ttk.Button(self.root, text='Yes', command=self.restart)
+        self.restartNo = ttk.Button(self.root, text='No', command=self.endBox)
+        self.restartName = ttk.Entry(self.root, textvariable=self.partName)
+
+        # ARRANGE RESTART SCREEN
+        self.restartLabel.grid(row=0, column=0, columnspan=2)
+        self.restartYes.grid(row=2, column=0)
+        self.restartNo.grid(row=2, column=1)
+        self.restartName.grid(row=1, column=0, columnspan=2)
+
+    def restart(self):
+        # RESET SKIPPED VARIABLES
+        self.skippedQuest = False
+        self.waitForRestartAnswer = False
+        self.isSkip = False
+        self.skippedQuestions = []
+        self.skipCount = 0
+
+        # GET NEW ASSESSMENT NAME AND RESET PARTNAME
+        self.assessmentName = self.partName.get()
+        self.partName.set('')
+
+        # REMOVE ALL OLD WIDGETS
+        self.restartLabel.destroy()
+        self.restartYes.destroy()
+        self.restartNo.destroy()
+        self.restartName.destroy()
+
+        # RESET ALL VARIABLES
+        self.mapnum = 0
+        self.maptype = self.maps[self.mapnum]
+        self.question = self.questions[self.maptype][0][0]
+        self.info = self.questions[self.maptype][0][2]
+        self.info = self.wrapinfo(self.info)
+        self.output = 0
+
+        self.startQuestions()
+
+    def pause(self):
         check = tk.Toplevel(self.root, bg='#f5f6f7')
         ttk.Label(check, text='Are you sure you want to exit?',
                   font=('Times New Roman', 16)).pack(side=TOP)
-        ttk.Button(check, text='Yes', command=self.root.destroy).pack(side=LEFT)
+        ttk.Button(check, text='Yes', command=self.pauseReport).pack(side=LEFT)
         ttk.Button(check, text='No', command=check.destroy).pack(side=RIGHT)
 
     def wrapinfo(self, txt):

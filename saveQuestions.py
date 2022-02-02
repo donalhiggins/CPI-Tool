@@ -32,20 +32,22 @@ class saveQuestions():
              (14, 1, 0) : (573, 28), (14, 1, 1) : (573, 17)}
 
     def __init__(self):
-        self.progress = pd.DataFrame(columns=['Map Number', 'Map', 'Question Number', 'Question', 'Answer', 'Flag', 'Critical'])
+        self.progress = pd.DataFrame(columns=['Map Number', 'Map', 'Question Number', 'Question', 'Answer', 'Flag', 'Critical', 'Assessment Name', 'Assessment Number'])
         self.skipped = pd.DataFrame(columns=['SMap Number', 'SQuestion Number', 'SQuestion', 'SFlag'])
 
-    def addQuestion(self, mapnum, map, questnum, question, ans, flg=np.nan, crit=np.nan):
+    def addQuestion(self, mapnum, map, questnum, question, ans, assess, assessnum, flg=np.nan, crit=np.nan):
         self.progress = self.progress.append({'Map Number' : mapnum, 'Map' : map, 
                                               'Question Number' : questnum, 'Question' : question,
                                               'Answer' : ans, 'Flag' : flg,
-                                              'Critical' : crit},
-                                               ignore_index=True)
+                                              'Critical' : crit, 'Assessment Name' : assess,
+                                              'Assessment Number' : assessnum},
+                                              ignore_index=True)
 
     def addSkip(self, questnum, mapnum, quest, flg):
         self.skipped = self.skipped.append({'SMap Number' : mapnum, 'SQuestion Number' : questnum, 'SQuestion' : quest, 'SFlag' : flg}, ignore_index=True)
 
     def resumeLastQuestion(self):
+        print((self.progress['Map Number'].iloc[-1], self.progress['Question Number'].iloc[-1], self.progress['Answer'].iloc[-1]))
         return (self.progress['Map Number'].iloc[-1], self.progress['Question Number'].iloc[-1], self.progress['Answer'].iloc[-1])
     
     def skipList(self):
@@ -85,11 +87,12 @@ class saveQuestions():
 
     def addCrit(self, critlst):
         self.progress.loc[self.progress['Question'] == critlst[0], ['Critical']] = critlst[1]
-        
+
     def mergeFlgCrit(self, flglst, critlst):
         for i in flglst:
-            temp = i[0]
-            self.progress.loc[self.progress['Question'] == temp, ['Flag']] = i[1]
+            tempNumber = i[0]
+            tempQuestion = i[1]
+            self.progress.loc[((self.progress['Question'] == tempQuestion) & (self.progress['Assessment Number'] == tempNumber)), 'Flag'] = i[2]
         for i in critlst:
             temp = i[0]
             self.progress.loc[self.progress['Question'] == temp, ['Critical']] = i[1]
@@ -100,7 +103,22 @@ class saveQuestions():
         self.progress = pd.concat([self.progress, self.skipped])
         self.progress.to_csv(f'Reports/{name}/{name}.cpi')
 
-    def genPDF(self, name, text):
+    def parseInfo(self):
+        text = 'Skipped Questions:\n'
+        flags = self.progress.loc[self.progress['Flag'].notna()]
+        flags = flags.reset_index()
+        for ind, row in flags.iterrows():
+            text += f"{row['Assessment Name']} : {row['Map']} : {row['Question']} : {row['Flag']}\n"
+        crits = self.progress.loc[self.progress['Critical'].notna()]
+        crits = crits.reset_index()
+        text += '\nCritical Questions:\n'
+        for ind, row in crits.iterrows():
+            text += f"{row['Assessment Name']} : {row['Map']} : {row['Question']} : {row['Critical']}\n"
+        
+        return text
+
+
+    def genPDF(self, name):
         packet = io.BytesIO()
         stringPacket = io.BytesIO()
         img = 'src/black.jpeg'
@@ -121,11 +139,12 @@ class saveQuestions():
         page = existing_pdf.getPage(0)
         page.mergePage(new_pdf.getPage(0))
         output.addPage(page)
+        text = self.parseInfo()
 
         if text != '':
             textcan = canvas.Canvas(stringPacket, pagesize=(792, 612))
             textobj = textcan.beginText(10, 550)
-            textobj.setFont('Times New Roman', 12)
+            textobj.setFont('Times-Roman', 12)
             text = text.split('\n')
             for line in text:
                 textobj.textLine(line)
