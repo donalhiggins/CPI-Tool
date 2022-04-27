@@ -25,7 +25,7 @@ class QuestionGUI():
     questions = {}
     maps = []
     output = 0
-    mapnum = 0
+    mapNum = 0
     skippedQuestions = []
     skippedQuest = False
     isSkip = False
@@ -38,25 +38,45 @@ class QuestionGUI():
     isNew = False
     assessmentNumber = 0
     waitForRestartAnswer = False
-
     waitForCritAnswer = False
     resumedAndNeedsRestart = False
     alreadyLoadedSave = False
 
     def __init__(self):
-        # READS IN DICTIONARY AND LIST FOR QUESTIONS
+        # READS IN MAPS_LIST.TXT TO GET ALL THE MAPS
         with open('src/maps_list.txt', encoding='utf8') as myFile:
             self.maps = myFile.readline().split(',')
+        
+        # READS IN QUESTIONS_DICT.TXT TO GET ALL QUESTIONS
         with open('src/questions_dict.txt', encoding='utf8') as myFile:
             self.questions = myFile.read()
+        # LOADS QUESTIONS INTO A DICTIONARY
         self.questions = json.loads(self.questions)
-        self.maptype = self.maps[self.mapnum]
+
+        # SETS INITAL VALUES FOR VARIABLES USING DATA READ IN FROM LIST
+        self.maptype = self.maps[self.mapNum]
         self.question = self.questions[self.maptype][0][0]
         self.info = self.questions[self.maptype][0][2]
         self.info = self.wrapinfo(self.info)
 
-        # CREATES LIST OF POSSBILE FILES TO RESUME
+        # CREATES LIST OF POSSIBILE FILES TO RESUME
         self.savedFiles = os.listdir('Reports/')
+
+        # DEFINE A TEMP VAR TO ITERATE AND DELETE FILES FROM SAVED FILES LIST
+        temp = list(self.savedFiles)
+        # CLEANS LIST OF POSSIBILE FILES TO ONLY FILES THAT WE CAN RESUME FROM
+        for i in range(len(self.savedFiles)):
+            if os.path.isfile(f'Reports/{temp[i]}'):
+                self.savedFiles.remove(temp[i])
+        
+        # DEFINE A TEMP VAR TO HOLD THE VALID SAVE FILES
+        temp = []
+        # DELETES ALL FOLDERS THAT DO NOT CONTAIN .CPI FILES
+        for i in range(len(self.savedFiles)):
+            for file in os.listdir(f'Reports/{self.savedFiles[i]}'):
+                if file.endswith('.cpi'):
+                    temp.append(self.savedFiles[i])
+        self.savedFiles = temp
 
         # CREATES root AND WELCOME WIDGETS
         self.root = ThemedTk(theme='arc')
@@ -138,7 +158,7 @@ class QuestionGUI():
         self.back.grid(row=2, column=0, pady=10)
 
     def startQuestions(self):
-        # ADDS ONE TO ASSESSMENT NUMBER
+        # ADDS ONE TO ASSESSMENT NUMBER WHENEVER A NEW ASSESSMENT IS STARTED
         self.assessmentNumber += 1
 
         self.isChange = False
@@ -227,8 +247,8 @@ class QuestionGUI():
             
             self.alreadyLoadedSave = True
             self.testName = self.saveFile
-            self.mapnum = temp[0]
-            self.maptype = self.maps[self.mapnum]
+            self.mapNum = temp[0]
+            self.maptype = self.maps[self.mapNum]
             self.question = self.questions[self.maptype][temp[1]][0]
             self.info = self.questions[self.maptype][temp[1]][2]
             self.info = self.wrapinfo(self.info)
@@ -278,7 +298,7 @@ class QuestionGUI():
 
                 # IF HITS CRITICAL / OK GOES TO NEXT MAP AND SKIPS IF NEEDED
                 if (not isinstance(self.output, int) or self.isSkip) and not self.fromSave:
-                    if self.mapnum == 14:
+                    if self.mapNum == 14:
                         # IF FINISHED WITH ALL SKIPPED QUESTIONS DONE
                         if len(self.skippedQuestions) == self.skipCount:
                             self.restartScreen()
@@ -291,9 +311,9 @@ class QuestionGUI():
                             try:
                                 self.addCritical()
                                 self.skipCount += 1
-                                self.mapnum = self.skippedQuestions[self.skipCount][0]
+                                self.mapNum = self.skippedQuestions[self.skipCount][0]
                                 self.output = self.skippedQuestions[self.skipCount][1]
-                                self.maptype = self.maps[self.mapnum]
+                                self.maptype = self.maps[self.mapNum]
                                 self.question = self.questions[self.maptype][0][0]
                                 self.info = self.questions[self.maptype][0][2]
                                 self.info = self.wrapinfo(self.info)
@@ -303,17 +323,17 @@ class QuestionGUI():
 
                         elif not self.waitForCritAnswer:
                             self.addCritical()
-                            self.mapnum += 1
-                            self.maptype = self.maps[self.mapnum]
+                            self.mapNum += 1
+                            self.maptype = self.maps[self.mapNum]
                             self.output = 0
                             self.question = self.questions[self.maptype][0][0]
                             self.info = self.questions[self.maptype][0][2]
                             self.info = self.wrapinfo(self.info)
                             self.isSkip = False
                             self.waitForCritAnswer = False
-                            if not self.isNew and len(self.skippedQuestions) > 0 and self.mapnum == self.skippedQuestions[-1][0]:
-                                self.mapnum += 1
-                                self.maptype = self.maps[self.mapnum]
+                            if not self.isNew and len(self.skippedQuestions) > 0 and self.mapNum == self.skippedQuestions[-1][0]:
+                                self.mapNum += 1
+                                self.maptype = self.maps[self.mapNum]
                                 self.question = self.questions[self.maptype][0][0]
                                 self.info = self.questions[self.maptype][0][2]
                                 self.info = self.wrapinfo(self.info)
@@ -363,16 +383,16 @@ class QuestionGUI():
 
     def skip(self):
         self.flags.append([self.assessmentNumber, self.question, self.entry.get()])
-        self.save.addSkip(self.output, self.mapnum, self.question, self.entry.get())
-        self.skippedQuestions.append([self.mapnum, self.output])
+        self.save.addSkip(self.output, self.mapNum, self.question, self.entry.get())
+        self.skippedQuestions.append([self.mapNum, self.output])
         self.isChange = True
         self.isSkip = True
         self.window.destroy()
 
     def doSkipped(self):
-        self.mapnum = self.skippedQuestions[self.skipCount][0]
+        self.mapNum = self.skippedQuestions[self.skipCount][0]
         self.output = self.skippedQuestions[self.skipCount][1]
-        self.maptype = self.maps[self.mapnum]
+        self.maptype = self.maps[self.mapNum]
         self.question = self.questions[self.maptype][self.output][0]
         self.info = self.questions[self.maptype][self.output][2]
         self.info = self.wrapinfo(self.info)
@@ -393,7 +413,7 @@ class QuestionGUI():
         self.answer = 'y'
         self.isChange = True
         self.fromSave = False
-        self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer, self.assessmentName, self.assessmentNumber)
+        self.save.addQuestion(self.mapNum, self.maptype, self.output, self.question, self.answer, self.assessmentName, self.assessmentNumber)
 
         if isinstance(self.output, int):
             self.output = self.questions[self.maptype][self.output][1][1]
@@ -406,7 +426,7 @@ class QuestionGUI():
         self.answer = 'n'
         self.isChange = True
         self.fromSave = False
-        self.save.addQuestion(self.mapnum, self.maptype, self.output, self.question, self.answer, self.assessmentName, self.assessmentNumber)
+        self.save.addQuestion(self.mapNum, self.maptype, self.output, self.question, self.answer, self.assessmentName, self.assessmentNumber)
         if isinstance(self.output, int):
             self.output = self.questions[self.maptype][self.output][1][0]
         if isinstance(self.output, int):
@@ -480,8 +500,8 @@ class QuestionGUI():
         self.restartName.destroy()
 
         # RESET ALL VARIABLES
-        self.mapnum = 0
-        self.maptype = self.maps[self.mapnum]
+        self.mapNum = 0
+        self.maptype = self.maps[self.mapNum]
         self.question = self.questions[self.maptype][0][0]
         self.info = self.questions[self.maptype][0][2]
         self.info = self.wrapinfo(self.info)
